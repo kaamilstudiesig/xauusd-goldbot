@@ -1,9 +1,10 @@
-pandas>=2.2
-numpy
-pyarrow
-lightgbm
-scikit-learn
-yfinance
-requests
-arch
-matplotlib
+# pinned to the versions the project was built and tested with
+pandas==3.1.0
+numpy==2.5.4
+pyarrow==26.0.0
+lightgbm==4.7.0
+scikit-learn==1.9.1
+yfinance==1.7.0
+requests==2.34.2
+arch==8.0.0
+matplotlib==3.11.2

@@ -48,3 +48,23 @@ def add_note(text: str, route: str = "", tags: str = "", author: str = "trader")
 
 def dumps(d: dict) -> str:
     return json.dumps({k: (None if pd.isna(v) else (round(float(v), 5) if isinstance(v, (int, float)) else str(v))) for k, v in d.items()})
+
+
+# ---- text snapshot (for git) ------------------------------------------------------------------
+# The scheduled runner commits journal/paper.sql (plain SQL, diff-friendly) instead of the binary
+# .db, so hourly commits stay tiny. The .db is rebuilt from it when missing.
+SQL = DB.with_suffix(".sql")
+
+
+def export_sql() -> None:
+    with connect() as con:
+        SQL.write_text("\n".join(con.iterdump()) + "\n")
+
+
+def restore_sql() -> bool:
+    if DB.exists() or not SQL.exists():
+        return False
+    con = sqlite3.connect(DB)
+    con.executescript(SQL.read_text())
+    con.close()
+    return True

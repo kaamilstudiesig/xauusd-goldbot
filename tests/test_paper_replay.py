@@ -6,7 +6,7 @@ warnings.filterwarnings("ignore")
 ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
 from goldbot import journal, paper
 
-def test_replay(start="2026-06-01"):
+def test_replay(start="2026-09-01"):
     tmp = Path(tempfile.mkdtemp())
     journal.DB = tmp / "test.db"
     cfg = paper.load_cfg(); cfg["paper_start"] = start

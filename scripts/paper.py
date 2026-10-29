@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from goldbot import paper  # noqa: E402
-from goldbot.journal import add_note  # noqa: E402
+from goldbot.journal import add_note, export_sql, restore_sql  # noqa: E402
 
 
 def main():
@@ -29,14 +29,18 @@ def main():
     ap.add_argument("--route", default="")
     ap.add_argument("--tags", default="")
     a = ap.parse_args()
+    if restore_sql():
+        print("journal restored from journal/paper.sql")
     if a.cmd == "run":
         s = paper.run_once(note=a.text)
         print(json.dumps(s, indent=2, default=str))
         (ROOT / "reports" / "paper_report.md").write_text(paper.report())
+        export_sql()
     elif a.cmd == "report":
         print(paper.report())
     else:
         add_note(a.text, a.route, a.tags)
+        export_sql()
         print("note saved")
 
 

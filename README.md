@@ -3,6 +3,17 @@
 One market, done properly: data → realistic backtests → paper trading with a full journal →
 recency-weighted re-scoring. **Simulation only: nothing here places real orders.**
 
+## Runs by itself (GitHub Actions)
+`.github/workflows/paper.yml` runs one paper-trading cycle every hour (Sun-Fri UTC) and commits the journal
+(`journal/paper.sql`), the report (`reports/paper_report.md`) and new price bars (`data/live/`).
+- Add the secret `TWELVEDATA_API_KEY` (repo Settings > Secrets and variables > Actions) for real spot bars;
+  without it the runner uses GC=F futures minus the measured basis.
+- Run it now: Actions tab > paper-trader > Run workflow.
+- Locally, `git pull` and then `scripts/paper.py report`. Don't run `paper.py run` locally as well, or the two
+  journals will diverge.
+
+Heavy research on demand: open `colab/research.ipynb` in Google Colab (File > Open notebook > GitHub).
+
 ## Teach it your judgement (labeller)
 ```bash
 .venv/bin/python scripts/labeller.py      # http://127.0.0.1:8765  - mark Take/Skip/Opposite on blind setups
