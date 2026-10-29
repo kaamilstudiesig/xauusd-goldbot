@@ -1,0 +1,4 @@
+# optional: forecasting-model features (scripts/forecast_features.py). Heavy; not needed by the paper trader.
+# CPU:  uv pip install --python .venv/bin/python --index-url https://download.pytorch.org/whl/cpu torch
+#       uv pip install --python .venv/bin/python -r requirements-ml.txt
+chronos-forecasting

@@ -106,3 +106,13 @@ Quirks found and handled (all checked, not assumed):
 | Kaufman, *Trading Systems and Methods* (efficiency ratio) | Trend strength separates trend from range | Yes (v34-v38) | Helped on DEV, failed VAL: overfit |
 | [joshyattridge/smart-money-concepts](https://github.com/joshyattridge/smart-money-concepts) (Python; FVG, swings, BOS/CHoCH, order blocks, liquidity) | Indicator definitions only, no backtests | Definitions mirrored in `goldbot/smc.py` (streaming, causal) | n/a |
 | TradingView / MQL5 SMC scripts for XAUUSD | Claimed edges, mostly unvalidated or commercial | No | No reproducible open-source XAUUSD SMC backtest found |
+
+## 8. Meta-label v2 sources (added 2026-10-30)
+- **CFTC Commitments of Traders**, COMEX gold (088691), disaggregated futures-only, via the official open-data API
+  `publicreporting.cftc.gov/resource/72hh-3qpy.json` (the www.cftc.gov zip files block scripts). Treated as known
+  from the Saturday after each Tuesday report. Stored in `data/raw/cot_gold.csv`.
+- **Chronos-Bolt** (`amazon/chronos-bolt-small`, Amazon 2024) via `chronos-forecasting`: 4-hour forecast quantiles
+  per setup, `scripts/forecast_features.py`. TimesFM 2.5 backend included for Colab GPU (not yet run).
+- ETF flows (SPDR GLD holdings) dropped: the public archive link now serves a PDF, no clean free source.
+- Result: `reports/meta_v2_report.md`. Macro features helped on VAL (top 10%: +0.22R, PF 1.38) but HOLD gave
+  PF 1.05 / +0.035R one-at-a-time (126 trades): target not met.
