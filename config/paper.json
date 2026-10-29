@@ -1,0 +1,14 @@
+{
+  "equity": 10000,
+  "risk_pct": 0.005,
+  "paper_start": "2026-10-30",
+  "history_from": "2024-01-01",
+  "allocation": {"daily_trend": 1.0},
+  "shadow": ["daily_trend_long", "london_breakout", "trend_breakout", "mean_reversion",
+             "london_breakout+macro", "trend_breakout+macro", "daily_trend+macro", "trend_pullback"],
+  "backtest_trades": "backtest_trades.parquet",
+  "half_life_days": 365,
+  "paper_weight": 3.0,
+  "pause_below_t": 0.5,
+  "promote_above_t": 2.0
+}

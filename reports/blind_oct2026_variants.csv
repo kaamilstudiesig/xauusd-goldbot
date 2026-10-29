@@ -1,0 +1,4 @@
+variant,signals,trades,trades_per_yr,win_rate,avg_r,pf,sharpe,cagr,max_dd,total_r
+sr_breakout_smc,15,14,182.6,0.214,-0.48,0.36,-4.93,-0.3564,-0.0404,-6.7
+sr_rejection_smc,3,3,39.1,0.0,-0.805,0.0,-4.63,-0.1461,-0.0123,-2.4
+sr_retest,8,8,104.4,0.25,-0.164,0.75,-1.45,-0.0838,-0.0144,-1.3

@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+# rebuilt by `python -m goldbot.data` (raw HF files are 60MB)
+data/raw/*.jsonl
+data/raw/README.md
+data/processed/
+reports/tmp/
+vendor/
+.env

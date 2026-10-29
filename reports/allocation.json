@@ -1,0 +1,26 @@
+{
+  "generated": "2026-10-29T17:53:10.110258+00:00",
+  "allocation": {},
+  "scores": {
+    "ml_lgbm": {
+      "w_avg_r": -0.19,
+      "eff_n": 1185.8,
+      "w_t": -2.98
+    },
+    "trend_breakout+macro": {
+      "w_avg_r": 0.119,
+      "eff_n": 201.3,
+      "w_t": 0.94
+    },
+    "london_breakout+macro": {
+      "w_avg_r": 0.091,
+      "eff_n": 145.4,
+      "w_t": 1.38
+    },
+    "mean_reversion+macro": {
+      "w_avg_r": 0.531,
+      "eff_n": 9.1,
+      "w_t": 0.94
+    }
+  }
+}

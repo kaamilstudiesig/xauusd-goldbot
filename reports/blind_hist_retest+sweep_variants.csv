@@ -1,0 +1,2 @@
+variant,signals,trades,trades_per_yr,win_rate,avg_r,pf,sharpe,cagr,max_dd,total_r
+retest+sweep,642,503,199.7,0.364,-0.107,0.82,-1.08,-0.1051,-0.259,-53.9

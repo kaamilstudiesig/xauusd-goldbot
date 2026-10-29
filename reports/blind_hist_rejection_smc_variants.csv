@@ -1,0 +1,2 @@
+variant,signals,trades,trades_per_yr,win_rate,avg_r,pf,sharpe,cagr,max_dd,total_r
+rejection_smc,245,226,89.7,0.372,-0.175,0.68,-1.38,-0.0768,-0.1947,-39.6

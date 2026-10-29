@@ -1,0 +1,21 @@
+{
+  "generated": "2026-10-29T17:49:55.509198+00:00",
+  "allocation": {},
+  "scores": {
+    "daily_trend": {
+      "w_avg_r": 0.713,
+      "eff_n": 18.6,
+      "w_t": 1.79
+    },
+    "daily_trend_long": {
+      "w_avg_r": 1.132,
+      "eff_n": 12.2,
+      "w_t": 1.92
+    },
+    "trend_breakout": {
+      "w_avg_r": 0.136,
+      "eff_n": 258.6,
+      "w_t": 1.22
+    }
+  }
+}
