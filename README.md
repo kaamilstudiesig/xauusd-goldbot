@@ -43,6 +43,8 @@ and paper trades get an extra 3x weight. Each paper run re-scores every route. I
 it. You approve changes by editing `config/paper.json`; nothing reallocates silently.
 
 ## Data caveats
+- 15m bars (zone analyser) come from Twelve Data XAU/USD spot, 2022-10 -> today: `goldbot.data.build_15m()`, see
+  docs/knowledge_base.md §7.
 - Since Jul 2025 bars are GC=F futures minus a futures/spot basis anchored to weekly spot closes.
   The level matches spot to about $1-3. Set `TWELVEDATA_API_KEY` to log a live spot cross-check each run.
 - yfinance is unofficial and can break. If it does, the next step is the OANDA v20 practice API.

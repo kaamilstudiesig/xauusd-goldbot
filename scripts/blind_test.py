@@ -44,27 +44,42 @@ VARIANTS = {
 DB = ROOT / "journal" / "blind.db"
 
 
-def load(start, end, warmup_days=20):
+def load(start, end, warmup_days=150):
     d = pd.read_parquet(PROC / "xauusd_15m.parquet")
     d = d.loc[pd.Timestamp(start, tz="UTC") - pd.Timedelta(days=warmup_days): pd.Timestamp(end, tz="UTC")]
     return d[["open", "high", "low", "close", "volume", "src"]]
 
 
-def run_variant(d, name, params, start, end):
+def scaled_costs(d, ref_price=1950.0):
+    """Cost stress test: every $ cost scaled by price / ref_price (2023 average), as if spreads and
+    slippage grow in proportion to the gold price. The default model (goldbot/costs.py) is unchanged."""
+    from dataclasses import fields, replace as dc_replace
+    from goldbot.costs import DEFAULT_COSTS
+    k = float(d["close"].mean()) / ref_price
+    usd = ["spread_london_ny", "spread_asia", "spread_rollover", "spread_late_ny", "commission_rt", "slippage_entry", "slippage_stop"]
+    return dc_replace(DEFAULT_COSTS, **{f: getattr(DEFAULT_COSTS, f) * k for f in usd})
+
+
+def run_variant(d, name, params, start, end, cost_scale=False):
     za = ZoneAnalyser(d, params)
     sig = za.run(start, end)
     frame = za.signal_frame(sig)
     frame.loc[frame.index < pd.Timestamp(start, tz="UTC"), "side"] = 0
     dd = d.copy()
     dd["atr"] = za.atr
-    trades, eq = bt.run(dd, frame, bt.BTConfig(risk_pct=0.005), route=name)
+    cfg = bt.BTConfig(risk_pct=0.005)
+    if cost_scale:
+        cfg.costs = scaled_costs(d.loc[start:end])
+    trades, eq = bt.run(dd, frame, cfg, route=name)
     trades = trades[trades.entry_time >= pd.Timestamp(start, tz="UTC")]
     if len(sig) and len(trades):
         sig = sig.drop_duplicates("bar_time").set_index("bar_time")
         sig_time = trades["entry_time"] - pd.Timedelta(minutes=15)
         ctx = sig.reindex(pd.DatetimeIndex(sig_time))
-        for col in ["trigger", "level", "tf", "kind", "wick", "body", "structure", "fvg_last3", "candle", "session", "atr15"]:
-            trades[col] = ctx[col].values
+        for col in ["trigger", "level", "tf", "kind", "wick", "body", "structure", "fvg_last3", "candle", "session", "atr15",
+                    "touches", "bias", "dbias", "hour", "body_frac", "sl_atr", "er"]:
+            if col in ctx:
+                trades[col] = ctx[col].values
     return trades, eq, sig, za
 
 
@@ -76,15 +91,19 @@ def journal(test, name, trades, sig):
         PRIMARY KEY (test, variant, entry_time))""")
     con.execute("""CREATE TABLE IF NOT EXISTS blind_signals (test TEXT, variant TEXT, bar_time TEXT, side INTEGER,
         trigger TEXT, level TEXT, close REAL, structure TEXT, candle TEXT, PRIMARY KEY (test, variant, bar_time))""")
+    cols = [r[1] for r in con.execute("PRAGMA table_info(blind_trades)")]
+    if "ctx" not in cols:  # extra per-trade context (json), added by the refinement loop
+        con.execute("ALTER TABLE blind_trades ADD COLUMN ctx TEXT")
     now = pd.Timestamp.now(tz="UTC").isoformat()
     # a re-run replaces that test+variant entirely, so stale rows from older code never linger
     con.execute("DELETE FROM blind_trades WHERE test=? AND variant=?", (test, name))
     con.execute("DELETE FROM blind_signals WHERE test=? AND variant=?", (test, name))
     for _, t in trades.iterrows():
-        con.execute("INSERT OR REPLACE INTO blind_trades VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        ctx = json.dumps({k: (None if pd.isna(t.get(k)) else float(t.get(k))) for k in ("touches", "bias", "dbias", "hour", "body_frac", "sl_atr", "atr15", "er") if k in t})
+        con.execute("INSERT OR REPLACE INTO blind_trades VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                     (test, name, str(t.entry_time), str(t.exit_time), int(t.side), t.entry, t.exit, t.sl,
                      None if pd.isna(t.tp) else t.tp, t.pnl, t.r, t.reason, int(t.bars), t.get("trigger"),
-                     t.get("level"), t.get("structure"), t.get("fvg_last3"), t.get("candle"), t.get("session"), now))
+                     t.get("level"), t.get("structure"), t.get("fvg_last3"), t.get("candle"), t.get("session"), now, ctx))
     for bt_, s in (sig.iterrows() if len(sig) else []):
         con.execute("INSERT OR REPLACE INTO blind_signals VALUES (?,?,?,?,?,?,?,?,?)",
                     (test, name, str(bt_), int(s.side), s.trigger, s.level, s.close, s.structure, s.candle))

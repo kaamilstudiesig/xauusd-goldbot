@@ -98,6 +98,80 @@ def build_hourly(refresh: bool = True) -> pd.DataFrame:
     return h
 
 
+# ---------- 15m bars ----------
+TD15 = RAW / "td15"
+TD_TZ = "Australia/Sydney"  # Twelve Data returned intraday XAU/USD stamped in Sydney time (AEST/AEDT), see docs
+
+
+def trading_week_mask(idx: pd.DatetimeIndex) -> np.ndarray:
+    """True for bars inside the spot-gold trading week: Sun 18:00 -> Fri 17:00 New York time,
+    minus the 17:00-18:00 NY daily break.
+    Drops weekend quotes some feeds print (Twelve Data has Saturday bars from mid-2025)."""
+    ny = idx.tz_convert("America/New_York")
+    dow, hr = ny.dayofweek, ny.hour
+    weekend = (dow == 5) | ((dow == 4) & (hr >= 17)) | ((dow == 6) & (hr < 18))
+    daily_break = hr == 17  # 17:00-18:00 NY the market is shut; the 2026 feed prints flat filler bars there
+    return ~np.asarray(weekend | daily_break)
+
+
+def load_twelvedata_15m(folder: Path = TD15) -> pd.DataFrame:
+    """XAU/USD 15m spot from Twelve Data CSV chunks (`datetime;open;high;low;close`, local Sydney time).
+
+    Fetch with the Twelve Data time_series endpoint (symbol XAU/USD, interval 15min, outputsize 5000,
+    56-day start_date/end_date windows; free plan = 8 calls/min, 800/day) and save each response as
+    data/raw/td15/td_<first>_<last>.csv."""
+    files = sorted(folder.glob("td_*.csv"))
+    if not files:
+        raise FileNotFoundError(f"no Twelve Data chunks in {folder}")
+    d = pd.concat([pd.read_csv(f, sep=";") for f in files]).dropna()
+    d["datetime"] = pd.to_datetime(d["datetime"])
+    d = d.drop_duplicates("datetime", keep="last").set_index("datetime").sort_index()
+    idx = d.index.tz_localize(TD_TZ, ambiguous="NaT", nonexistent="NaT")
+    d.index = idx
+    d = d[~d.index.isna()]
+    d.index = d.index.tz_convert("UTC")
+    d = d[OHLC].astype(float)
+    d = d[trading_week_mask(d.index)]
+    d = d[(d["high"] >= d[["open", "close"]].max(axis=1)) & (d["low"] <= d[["open", "close"]].min(axis=1))]
+    d["volume"] = 0.0
+    return d[~d.index.duplicated()]
+
+
+def build_15m(start: str = "2022-01-01", use_futures: bool = True) -> pd.DataFrame:
+    """Build data/processed/xauusd_15m.parquet.
+
+    Priority (first source wins on overlapping bars):
+      1. Twelve Data XAU/USD 15m spot (data/raw/td15), if present: one consistent spot feed 2022 -> today
+      2. HF 15m spot (data/raw/XAU_15m_data.jsonl), 2022 -> Jul 2025
+      3. yfinance GC=F 15m (last ~60 days) minus the daily futures/spot basis (basis_daily.parquet)
+    """
+    parts = []
+    if TD15.exists() and any(TD15.glob("td_*.csv")):
+        td = load_twelvedata_15m()
+        td["src"] = "spot_twelvedata"
+        parts.append(td)
+    if (RAW / "XAU_15m_data.jsonl").exists():
+        hf = load_hf_spot("15m")
+        hf["src"] = "spot_hf"
+        parts.append(hf)
+    if use_futures and (PROC / "basis_daily.parquet").exists():
+        try:
+            fut = fetch_futures(period="60d", interval="15m")
+            b = pd.read_parquet(PROC / "basis_daily.parquet")["basis"]
+            px = futures_to_spot(fut, b)
+            px["src"] = "gcf_proxy"
+            parts.append(px)
+        except Exception as e:  # network / yfinance failures should not kill the build
+            print("futures 15m skipped:", e)
+    if not parts:
+        raise RuntimeError("no 15m source available")
+    d = pd.concat(parts)
+    d = d[~d.index.duplicated(keep="first")].sort_index()
+    d = d.loc[pd.Timestamp(start, tz="UTC"):]
+    d.to_parquet(PROC / "xauusd_15m.parquet")
+    return d
+
+
 # ---------- macro ----------
 def fred(series: str) -> pd.Series:
     r = requests.get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series}", timeout=30)

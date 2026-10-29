@@ -7,6 +7,8 @@ Signal contract (a DataFrame aligned to the bars, produced by a route):
   max_bars  time stop in bars (NaN = none)
   trail_atr optional ATR multiple for a trailing stop, fixed in $ at entry (NaN = none)
   force_exit optional bool: close any open position at this bar's close
+  be_r      optional: once a bar trades be_r x risk in favour, the stop moves to the entry price
+            from the next bar on (NaN = off)
 
 Fill rules (conservative):
   - prices are bid; longs buy at ask (bid + spread), shorts cover at ask
@@ -44,6 +46,7 @@ def run(df: pd.DataFrame, sig: pd.DataFrame, cfg: BTConfig | None = None, route:
     mb = sig["max_bars"].values if "max_bars" in sig else np.full(len(df), np.nan)
     tr = sig["trail_atr"].values if "trail_atr" in sig else np.full(len(df), np.nan)
     fx = sig["force_exit"].fillna(False).values.astype(bool) if "force_exit" in sig else np.zeros(len(df), bool)
+    ber = sig["be_r"].values.astype(float) if "be_r" in sig else np.full(len(df), np.nan)
     idx = df.index
     days = idx.normalize().values
 
@@ -56,6 +59,7 @@ def run(df: pd.DataFrame, sig: pd.DataFrame, cfg: BTConfig | None = None, route:
     max_b = np.nan
     trail = np.nan
     risk_usd = 0.0
+    be_px = np.nan
 
     def close_pos(j, px, reason):
         nonlocal eq, pos
@@ -91,7 +95,11 @@ def run(df: pd.DataFrame, sig: pd.DataFrame, cfg: BTConfig | None = None, route:
                 if fx[i] or (not np.isnan(max_b) and i - ei >= max_b):
                     px = cl[i] if pos > 0 else cl[i] + sp
                     close_pos(i, px, "time" if not fx[i] else "session_end")
-                elif not np.isnan(trail):
+                elif not np.isnan(be_px):
+                    if (pos > 0 and h[i] >= be_px) or (pos < 0 and l[i] + sp <= be_px):
+                        sl = max(sl, entry) if pos > 0 else min(sl, entry)
+                        be_px = np.nan
+                if pos != 0 and not np.isnan(trail):
                     if pos > 0:
                         sl = max(sl, cl[i] - trail)
                     else:
@@ -109,6 +117,7 @@ def run(df: pd.DataFrame, sig: pd.DataFrame, cfg: BTConfig | None = None, route:
             sl0 = sl
             tp = px + s * tp_d[i] if not np.isnan(tp_d[i]) else np.nan
             max_b, trail = mb[i], tr[i] * atr[i]
+            be_px = px + s * ber[i] * sl_d[i] if not np.isnan(ber[i]) else np.nan
         eq_curve[i] = eq + ((cl[i] - entry) * size * pos if pos != 0 and i >= ei else 0.0)
 
     if pos != 0:

@@ -1,0 +1,4 @@
+ts,variant,note,dev_n,dev_win,dev_avg_r,dev_pf,dev_tot_r,dev_months_pos,dev_months_pf12,dev_by_year,val_n,val_win,val_avg_r,val_pf,val_tot_r,hold_n,hold_win,hold_avg_r,hold_pf,hold_tot_r,hold_months_pos,hold_months_pf12,secs
+2026-10-29 19:19,v18_v09_h4only,HOLDOUT: v18 final candidate + v00 reference,88,0.386,0.149,1.23,13.1,14/23,13,"{2023: 0.181, 2024: 0.121}",21,0.333,0.144,1.22,3.0,50,0.34,0.069,1.1,3.5,7/14,7,27
+2026-10-29 19:20,v00_breakout_smc,HOLDOUT: v18 final candidate + v00 reference,586,0.377,-0.076,0.88,-44.7,9/24,7,"{2023: -0.181, 2024: 0.029}",157,0.376,-0.03,0.95,-4.7,313,0.364,-0.048,0.92,-15.1,6/15,6,53
+2026-10-29 19:21,v18_v09_h4only,"HOLDOUT cost stress, same version [costs x price]",88,0.386,0.142,1.22,12.5,14/23,13,"{2023: 0.181, 2024: 0.109}",21,0.286,0.131,1.2,2.7,50,0.34,0.048,1.07,2.4,7/14,7,26

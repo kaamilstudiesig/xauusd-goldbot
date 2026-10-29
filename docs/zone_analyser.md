@@ -40,5 +40,25 @@ lines exactly as the analyser saw them at entry are in `reports/charts/<test>/`.
 scripts/run_hist.sh      # all variants, 2023-01 -> 2025-07, in parallel
 ```
 
+## Refinement knobs (ZoneParams; defaults = original behaviour)
+| Param | Meaning |
+|---|---|
+| `bias`, `bias_days`, `bias_mode` | daily trend filter from completed UTC days: `"donchian"` (20-day channel state) or `"sma"` |
+| `er_min`, `er_days` | trend-strength gate: Kaufman efficiency ratio of daily closes |
+| `stop_mode` | `"candle"` (original), `"swing"` (beyond last confirmed 15m swing), `"atr"` |
+| `flat_hour=-1`, `max_bars`, `weekend_flat` | hold past the session (time stop in 15m bars), still flat into the weekend |
+| `be_r`, `trail_atr` | breakeven / trailing stop (backtester `be_r`, `trail_atr`) |
+| `min_touches`, `skip_candles`, `skip_hours`, `days_ok`, `shock_x`/`shock_bars` | entry filters |
+
+## Refinement loop
+```bash
+.venv/bin/python scripts/signal_pool.py                         # DEV signals scored one by one (gross vs net)
+.venv/bin/python scripts/zone_research.py v18_v09_h4only         # DEV + VAL, journaled to journal/blind.db
+.venv/bin/python scripts/zone_research.py v18_v09_h4only --holdout [--cost-scale]   # once per final version
+.venv/bin/python scripts/zone_findings.py --final v18_v09_h4only
+```
+Versions live in `scripts/zone_variants.py`. Every run is in `reports/iterations.csv`, and holdout runs are also
+in `reports/holdout_log.csv`.
+
 ## Results
-See `reports/zone_findings.md`.
+See `reports/iterations.md` (every version, the conclusion) and `reports/zone_findings.md` (journal breakdowns).

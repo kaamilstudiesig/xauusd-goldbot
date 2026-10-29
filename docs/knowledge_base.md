@@ -1,7 +1,7 @@
 # XAU/USD knowledge base
 
 What drives gold, what the research says about predicting it, and where each idea is used in this project.
-Last updated 2026-10-30.
+Last updated 2026-10-29 (cloud session: 15m data source, zone-analyser research).
 
 ## 1. Price drivers (ranked by evidence)
 
@@ -61,10 +61,48 @@ Last updated 2026-10-30.
 | Hugging Face `ZombitX64/xauusd-gold-price-historical-data-2004-2025` | Spot history 2004-2025 (in use) |
 | yfinance `GC=F`, `DX-Y.NYB`, `^VIX`, `^TNX` | Recent bars + macro (in use) |
 | FRED | Real yields, breakevens, fed funds (in use) |
-| Twelve Data | Spot cross-check (set `TWELVEDATA_API_KEY`) |
+| Twelve Data | XAU/USD 15m spot 2022-10 -> today (in use, see §7); spot cross-check (`TWELVEDATA_API_KEY`) |
 | LightGBM | `ml_lgbm` route (tested: no edge on H1) |
 | Kronos (shiyu-coder/Kronos) | `kronos` experimental route |
 | NautilusTrader / QuantConnect LEAN | Upgrade path when going live with a broker |
 | Vibe-Trading (HKUDS) | Fast prototyping of new route ideas in plain English |
 | QuantAgent / TradingAgents | Candidates for a news/chart "context" layer, not for execution |
 | OANDA v20 practice API | Broker-grade paper fills on Linux (next step) |
+
+## 7. 15m data source (filled the Aug 2025 -> Aug 2026 gap)
+
+**Twelve Data `time_series`, symbol `XAU/USD`, interval `15min`**, used through the user's connected Twelve Data
+account (free Basic plan: 8 calls/min, 800/day, 5000 bars per call; earliest 15m bar 2020-01-24).
+Thirty-three 56-day windows cover **2022-10-24 -> 2026-10-29 (94.6k bars)**. The raw responses are in
+`data/raw/td15/td_<first>_<last>.csv` and are built by `goldbot.data.build_15m()` into
+`data/processed/xauusd_15m.parquet`. This replaces the HF-2022 + GC=F-minus-basis stitch with one spot feed.
+To refresh: fetch the newest window (any API key or the MCP connector), save it into `data/raw/td15/`, then
+run `build_15m()`.
+
+Quirks found and handled (all checked, not assumed):
+- **Timestamps are in Australia/Sydney time (AEST/AEDT)**, not UTC. Evidence: the weekly open lands on
+  Sun 18:00 New York and the last bar on Fri 16:45 NY across US and Australian DST changes, and NFP spikes
+  sit at 12:30/13:30 UTC once converted. `TD_TZ` in `goldbot/data.py`.
+- **Weekend quotes** from mid-2025 (whole Saturdays, flat weekend filler in 2026) and **flat filler bars in the
+  17:00-18:00 NY daily break** in 2026: removed by `trading_week_mask`.
+- Friday closes match the weekly spot file to within about $1 in 2026 and a few dollars in late 2025.
+- In winter weeks of 2022-2024 the feed stops about 1.5h before the real Friday close. The analyser never
+  trades then (no entries after 18:00 UTC on Fridays).
+- 2026 prices carry 5 decimals (composite feed). Treat 2026 fills as approximate.
+- Not usable from this cloud environment (blocked by its network policy): Hugging Face, Yahoo Finance (yfinance),
+  FRED, Kaggle. With network access, `build_15m()` still merges HF and GC=F proxy bars where Twelve Data has
+  no bar.
+
+## 8. Research on intraday S/R, SMC and gold (zone-analyser refinement, Oct 2026)
+
+| Source | Claim | Tested here? | Result |
+|---|---|---|---|
+| Osler (2000), *Support for Resistance: Technical Analysis and Intraday Exchange Rates*, FRBNY EPR; Osler (2003), *Currency Orders and Exchange Rate Dynamics*, J. Finance ([NY Fed SR125](https://www.newyorkfed.org/medialibrary/media/research/staff_reports/sr125.pdf), [SR150](https://www.newyorkfed.org/medialibrary/media/research/staff_reports/sr150.pdf)) | Take-profits cluster at round numbers (reversals); stop-losses cluster just beyond them (breaks accelerate) | Yes: breakouts crossing $10/$25/$50 levels | No consistent effect on gold DEV (sign flips between years) |
+| Chang & Osler (1999) / FMG DP 142, *When support/resistance levels are broken, can profits be made?* ([FMG](https://www.fmg.ac.uk/publications/discussion-papers/when-supportresistance-levels-are-broken-can-profits-be-made)) | S/R breaks profitable after costs in FX | Yes (the breakout trigger) | Not on its own: about 0 gross. Positive only with the daily trend, 3R and a 24h hold |
+| Batten, Lucey, McGroarty, Peat, Urquhart (2018), *Does intraday technical trading have predictive power in precious metal markets?*, JIFMIM ([IDEAS](https://ideas.repec.org/a/eee/intfin/v52y2018icp102-113.html)) | 5-min gold rules: standard parameters have no predictive power; some do after searching a parameter universe, gross of costs | Method lesson | Same pattern here: many DEV winners, few survive VAL. Hence the strict split and the logged count of versions |
+| Sullivan, Timmermann & White (1999); Bailey & López de Prado (2014) | Data snooping and deflated Sharpe | Method | 44 versions tried, all logged in `reports/iterations.md` |
+| Gao, Han, Li & Zhou (2018), *Market intraday momentum*, JFE; commodity intraday momentum (Hull repository) | First half-hour predicts last half-hour; stronger on news days | Indirectly (session splits) | NY-session entries strongest on DEV; London-open entries weakest |
+| Hurst, Ooi & Pedersen (2017); Moskowitz, Ooi & Pedersen (2012) | Time-series momentum | Yes: 20-day Donchian daily bias | The only filter positive in both DEV years |
+| Kaufman, *Trading Systems and Methods* (efficiency ratio) | Trend strength separates trend from range | Yes (v34-v38) | Helped on DEV, failed VAL: overfit |
+| [joshyattridge/smart-money-concepts](https://github.com/joshyattridge/smart-money-concepts) (Python; FVG, swings, BOS/CHoCH, order blocks, liquidity) | Indicator definitions only, no backtests | Definitions mirrored in `goldbot/smc.py` (streaming, causal) | n/a |
+| TradingView / MQL5 SMC scripts for XAUUSD | Claimed edges, mostly unvalidated or commercial | No | No reproducible open-source XAUUSD SMC backtest found |
