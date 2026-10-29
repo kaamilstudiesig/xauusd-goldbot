@@ -8,3 +8,4 @@ data/processed/
 reports/tmp/
 vendor/
 .env
+journal/models/

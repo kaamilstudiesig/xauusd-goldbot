@@ -3,6 +3,13 @@
 One market, done properly: data → realistic backtests → paper trading with a full journal →
 recency-weighted re-scoring. **Simulation only: nothing here places real orders.**
 
+## Teach it your judgement (labeller)
+```bash
+.venv/bin/python scripts/labeller.py      # http://127.0.0.1:8765  - mark Take/Skip/Opposite on blind setups
+.venv/bin/python scripts/train_meta.py    # your edge, imitation model, meta-label model -> reports/meta_report.md
+```
+See `docs/labeller.md`.
+
 ## Quick start
 ```bash
 # refresh history + macro (run weekly)

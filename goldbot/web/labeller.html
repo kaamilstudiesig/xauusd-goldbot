@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Setup Labeller</title>
+<style>
+  :root { --bg:#f6f5f2; --panel:#ffffff; --ink:#1d1f21; --muted:#6b6f76; --line:#e2e0db;
+          --take:#1f9e89; --skip:#8a8f98; --opp:#d1495b; --accent:#e9a03b; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#16181b; --panel:#1f2226; --ink:#e8e6e1; --muted:#9aa0a8; --line:#33373d; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 system-ui, -apple-system, Segoe UI, sans-serif; }
+  header { display:flex; align-items:center; gap:16px; padding:10px 16px; border-bottom:1px solid var(--line); background:var(--panel); position:sticky; top:0; z-index:2; }
+  header h1 { font-size:15px; margin:0; font-weight:600; }
+  .progress { color:var(--muted); font-variant-numeric:tabular-nums; }
+  .bar { flex:1; height:6px; background:var(--line); border-radius:3px; overflow:hidden; max-width:320px; }
+  .bar > div { height:100%; background:var(--accent); width:0; transition:width .3s; }
+  main { display:grid; grid-template-columns: minmax(0,1fr) 300px; gap:16px; padding:16px; max-width:1500px; margin:0 auto; }
+  @media (max-width: 960px) { main { grid-template-columns: 1fr; } }
+  .chart { background:#fff; border:1px solid var(--line); border-radius:8px; overflow:hidden; min-height:300px; display:flex; align-items:center; justify-content:center; }
+  .chart img { width:100%; height:auto; display:block; }
+  aside { display:flex; flex-direction:column; gap:12px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px 14px; }
+  .setup { font-size:18px; font-weight:650; margin:0 0 6px; }
+  .long { color:var(--take); } .short { color:var(--opp); }
+  dl { display:grid; grid-template-columns:auto 1fr; gap:3px 10px; margin:0; font-size:13px; }
+  dt { color:var(--muted); } dd { margin:0; font-variant-numeric:tabular-nums; }
+  .btns { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  button { font:inherit; border:1px solid var(--line); background:var(--panel); color:var(--ink); border-radius:6px; padding:10px 6px; cursor:pointer; }
+  button:hover { border-color:var(--muted); }
+  button.sel.take { background:var(--take); color:#fff; border-color:var(--take); }
+  button.sel.skip { background:var(--skip); color:#fff; border-color:var(--skip); }
+  button.sel.opposite { background:var(--opp); color:#fff; border-color:var(--opp); }
+  .conf { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:8px; }
+  .conf button[disabled] { opacity:.4; cursor:not-allowed; }
+  kbd { font:11px ui-monospace, monospace; border:1px solid var(--line); border-bottom-width:2px; border-radius:4px; padding:0 4px; color:var(--muted); }
+  textarea { width:100%; font:inherit; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--ink); padding:8px; resize:vertical; min-height:56px; }
+  .muted { color:var(--muted); font-size:12px; }
+  .row { display:flex; gap:8px; }
+  .row button { flex:1; padding:7px; font-size:13px; }
+  .toast { position:fixed; bottom:16px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--bg); padding:8px 14px; border-radius:6px; opacity:0; transition:opacity .2s; pointer-events:none; }
+  .toast.on { opacity:.92; }
+  table { width:100%; border-collapse:collapse; font-size:13px; font-variant-numeric:tabular-nums; }
+  th, td { text-align:right; padding:3px 6px; border-bottom:1px solid var(--line); }
+  th:first-child, td:first-child { text-align:left; }
+  #stats { display:none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>XAU/USD setup labeller</h1>
+  <div class="bar"><div id="barfill"></div></div>
+  <span class="progress" id="progress">–</span>
+  <span class="muted" style="margin-left:auto">Would you take this trade, as it is right now?</span>
+</header>
+<main>
+  <div class="chart" id="chart"><span class="muted">Loading…</span></div>
+  <aside>
+    <div class="card">
+      <p class="setup" id="setup">–</p>
+      <dl id="meta"></dl>
+    </div>
+    <div class="card">
+      <div class="btns">
+        <button class="take" data-d="take">Take <kbd>T</kbd></button>
+        <button class="skip" data-d="skip">Skip <kbd>S</kbd></button>
+        <button class="opposite" data-d="opposite">Opposite <kbd>O</kbd></button>
+      </div>
+      <div class="conf" id="conf">
+        <button data-c="1" disabled>Low <kbd>1</kbd></button>
+        <button data-c="2" disabled>Medium <kbd>2</kbd></button>
+        <button data-c="3" disabled>High <kbd>3</kbd></button>
+      </div>
+      <p class="muted" style="margin:8px 0 0">Pick a decision, then a confidence to save and move on. "Opposite" = you'd trade it the other way (e.g. a fake-out).</p>
+    </div>
+    <div class="card">
+      <label class="muted" for="note">Note (optional) <kbd>N</kbd></label>
+      <textarea id="note" placeholder="Why? e.g. 'London fake-out risk', 'no displacement', 'clean retest'"></textarea>
+    </div>
+    <div class="card row">
+      <button id="undo">Undo last <kbd>Z</kbd></button>
+      <button id="reveal">Results</button>
+    </div>
+    <div class="card" id="stats"></div>
+  </aside>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+const $ = s => document.querySelector(s);
+let cur = null, decision = null, shownAt = 0, queue = [];
+const prefetch = new Map();
+
+function toast(t){ const el=$("#toast"); el.textContent=t; el.classList.add("on"); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove("on"),1400); }
+async function j(url, opts){ const r = await fetch(url, opts); if(!r.ok) throw new Error(await r.text()); return r.json(); }
+function img(cid){ if(!prefetch.has(cid)){ const i=new Image(); i.src=`/chart/${cid}.png`; prefetch.set(cid,i);} return prefetch.get(cid); }
+
+function setDecision(d){
+  decision = d;
+  document.querySelectorAll(".btns button").forEach(b=>b.classList.toggle("sel", b.dataset.d===d));
+  document.querySelectorAll("#conf button").forEach(b=>b.disabled = !d);
+}
+
+function show(m){
+  cur = m; setDecision(null); $("#note").value = "";
+  const dir = m.side > 0 ? '<span class="long">LONG</span>' : '<span class="short">SHORT</span>';
+  $("#setup").innerHTML = `${dir} · ${m.trigger}`;
+  const rows = [
+    ["When", m.when], ["Line", `${m.tf} ${m.kind} ${m.level_side}`], ["Touches", m.touches],
+    ["Structure", m.structure || "none"], ["Candle", m.candle], ["Session", m.session],
+    ["Entry ≈", m.entry_ref], ["Stop", m.stop], ["2R / 3R", `${m.t2} / ${m.t3}`],
+  ];
+  $("#meta").innerHTML = rows.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join("");
+  const chart = $("#chart"); chart.innerHTML = "";
+  const i = img(m.cid); i.alt = `Chart for setup ${m.cid}`; chart.appendChild(i);
+  shownAt = performance.now();
+}
+
+async function progress(){
+  const p = await j("/api/progress");
+  $("#progress").textContent = `${p.labelled} labelled · ${p.remaining} left`;
+  $("#barfill").style.width = Math.min(100, p.labelled / p.goal * 100) + "%";
+}
+
+async function next(){
+  const r = await j("/api/next?n=3");
+  if(!r.items.length){ $("#chart").innerHTML='<span class="muted">All candidates labelled.</span>'; return; }
+  r.items.slice(1).forEach(m=>img(m.cid));
+  show(r.items[0]);
+  progress();
+}
+
+async function save(conf){
+  if(!cur || !decision) return;
+  const body = { cid:cur.cid, decision, confidence:conf, note:$("#note").value.trim(), seconds:(performance.now()-shownAt)/1000 };
+  await j("/api/label", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) });
+  toast(`${decision} · confidence ${conf}`);
+  next();
+}
+
+async function undo(){
+  const r = await j("/api/undo", { method:"POST" });
+  if(r.cid){ const m = await j(`/api/candidate/${r.cid}`); show(m); progress(); toast("Undone"); }
+}
+
+async function reveal(){
+  const box = $("#stats");
+  if(box.style.display === "block"){ box.style.display = "none"; return; }
+  if(!confirm("Seeing results can bias the labels you give next. Best done after finishing a batch. Show them?")) return;
+  const s = await j("/api/stats");
+  box.style.display = "block";
+  if(s.message){ box.innerHTML = `<p class="muted">${s.message}</p>`; return; }
+  const row = r => `<tr><td>${r.group}</td><td>${r.n}</td><td>${r.win3}</td><td>${r.r3}</td><td>${r.r2}</td></tr>`;
+  box.innerHTML = `<p class="muted" style="margin-top:0">Outcome of the setup as shown (after costs, R per trade). Baseline = every candidate.</p>
+    <table><tr><th></th><th>n</th><th>win 3R</th><th>avg 3R</th><th>avg 2R</th></tr>${s.rows.map(row).join("")}</table>
+    <p class="muted">${s.note}</p>`;
+}
+
+document.querySelectorAll(".btns button").forEach(b=>b.onclick=()=>setDecision(b.dataset.d));
+document.querySelectorAll("#conf button").forEach(b=>b.onclick=()=>save(+b.dataset.c));
+$("#undo").onclick = undo; $("#reveal").onclick = reveal;
+document.addEventListener("keydown", e=>{
+  if(e.target.tagName === "TEXTAREA"){ if(e.key==="Escape") e.target.blur(); return; }
+  const k = e.key.toLowerCase();
+  if(k==="t") setDecision("take"); else if(k==="s") setDecision("skip"); else if(k==="o") setDecision("opposite");
+  else if(["1","2","3"].includes(k) && decision) save(+k);
+  else if(k==="z") undo(); else if(k==="n"){ e.preventDefault(); $("#note").focus(); }
+});
+next();
+</script>
+</body>
+</html>
