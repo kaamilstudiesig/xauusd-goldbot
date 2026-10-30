@@ -97,6 +97,11 @@ flowchart LR
 - Re-scoring flags `flag_pause` / `flag_promote`; nothing reallocates until you edit `config/paper.json`.
 - GitHub's free scheduler can be late or skip runs (4 runs in the first 17 hours instead of 17). No trades are lost.
 
+**Daily report:** `.github/workflows/daily.yml` (copy in `docs/daily-workflow.yml`) runs Mon-Fri at 21:35 UTC:
+a fresh paper cycle, then `scripts/daily_report.py`, which writes `reports/daily/YYYY-MM-DD.md` + chart and posts it as
+a GitHub issue mentioning you, so it arrives by email and in the GitHub app. It covers today's trades with
+reasons, open positions, the scorecard, tomorrow's daily-trend triggers, macro, the nearest H4/H1 lines and watch windows.
+
 ## Teaching it your judgement
 
 ```mermaid
