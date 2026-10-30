@@ -34,6 +34,15 @@ The shadow routes cost nothing to run. Every one of their trades is journaled wi
 you can see whether the 2023-26 improvement continues. The allocator flags `flag_promote` when a
 route's recency-weighted t-stat exceeds 2.0 (paper trades count 3x).
 
+### zone_v18: 15m zone analyser, H4 levels (shadow since 2026-10-30)
+- Your process automated (`goldbot/analyser.py`): breakout of an H4 wick/body channel line, 15m close beyond it
+  with a real body or BOS, only in the daily-trend direction (20-day Donchian), 3R target, held up to 24h,
+  flat before the weekend. Defined as `v18_v09_h4only` in `scripts/zone_variants.py`.
+- Results (cloud session, Twelve Data spot): DEV +0.149R / PF 1.23, VAL +0.144R / PF 1.22, HOLD (Aug 2025 ->
+  Oct 2026, run once) **+0.069R / PF 1.10 on 50 trades**, losing the last five months. A bootstrap gives PF
+  anywhere from 0.61 to 1.82. Full history of 44 versions: `reports/iterations.md`.
+- Paper traded on 15m bars by the hourly GitHub runner (`config/paper.json` → `zone_routes`).
+
 ## Status: TESTED, NOT RUN
 
 ### ml_lgbm: LightGBM + triple-barrier labels, purged walk-forward
@@ -47,8 +56,18 @@ route's recency-weighted t-stat exceeds 2.0 (paper trades count 3x).
 - See the install steps at the top of `goldbot/routes/experimental.py`. Run with `--routes kronos --since 2024-01-01`.
 - Independent forex evidence is negative (~50% directional accuracy); test before trusting.
 
+## Later studies (filters on top of the zone analyser's setups)
+| Study | Method | Unseen-months result | Report |
+|---|---|---|---|
+| Meta-label v1 | LightGBM on setup features, outcomes only | -0.064R (raw -0.099R) | `scripts/train_meta.py` |
+| Meta-label v2 | + COT, macro, intraday, Chronos forecast features; macro chosen on VAL | **PF 1.05, +0.035R, 126 trades**: target not met | `reports/meta_v2_report.md` |
+| Turning points | 4,418 ZigZag turns, why-conditions, timing/direction models | turn-or-continue AUC 0.56-0.57; VAL trading negative, HOLD not spent | `reports/turning_points_report.md` |
+| Your labels | labeller + imitation model | not measured yet | `docs/labeller.md` |
+
 ## Ideas queue (not yet built)
-1. **Your own setups**: write your discretionary XAU/USD rules as a route. Highest expected value.
+1. **Your own edge**: label 300+ setups or keep a forward trade journal; measure whether your picks beat the raw setups.
+1. **HistData 1-minute XAU/USD 2009-2022**: test `daily_trend` and `v18` across the 2011-15 bear market and the 2016-18 range; also more exact intrabar fills.
+1. **Daily briefing**: bias, today's H4 levels, news windows and position size, generated each morning.
 2. **Event filter**: no new intraday entries 30 min before/after NFP, CPI, FOMC (needs a calendar feed).
 3. **COT positioning extreme filter** on daily_trend (CFTC weekly data).
 4. **Volatility targeting** (Carver): size by forecast volatility (GARCH) instead of fixed 0.5% risk.
