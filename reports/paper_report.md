@@ -1,6 +1,6 @@
 # Paper trading report
 
-Last run: 2026-10-29T23:54:16.178124+00:00 | last bar 2026-10-29 23:30:00+00:00 | basis 0.00 spot=4008.66 last_bar_close=4011.77
+Last run: 2026-10-30T05:34:14.244733+00:00 | last bar 2026-10-30 05:15:00+00:00 | basis 0.00 spot=4006.57 last_bar_close=4005.53
 Equity: 10,000.00 (closed +0.00, open +0.00)
 
 ## Route status (backtest + paper, recency-weighted)
@@ -15,5 +15,10 @@ london_breakout+macro     0.0    0.091  145.4  1.38 shadow
     daily_trend+macro     0.0    0.495   20.4  1.37 shadow
        trend_pullback     0.0   -0.080  149.1 -0.71 shadow
              zone_v18     0.0    0.000    0.0  0.00 shadow
+
+## Open positions
+               route  portfolio                entry_time  side    entry          sl   tp       pnl
+      trend_breakout      False 2026-10-30 04:00:00+00:00    -1 3992.903 4022.321288 None -7.056835
+trend_breakout+macro      False 2026-10-30 04:00:00+00:00    -1 3992.903 4022.321288 None -7.056835
 
 Total closed trades: 0. Judge routes after 100+ trades, not after a month.
