@@ -1,0 +1,69 @@
+# Daily paper-trading report (simulation only). Paste this file into GitHub as .github/workflows/daily.yml
+# Runs Mon-Fri at 21:35 UTC (after the NY close): one fresh paper cycle, then the report, which is saved to
+# reports/daily/ and posted as a GitHub issue that @mentions you, so GitHub emails it.
+name: daily-report
+
+on:
+  schedule:
+    - cron: "35 21 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: paper-trader        # same lock as the hourly bot: never two writers on the journal
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: requirements.txt
+
+      - name: Install
+        run: |
+          uv venv .venv --python 3.12
+          uv pip install --python .venv/bin/python -r requirements.txt
+
+      - name: Restore macro data
+        uses: actions/cache@v4
+        with:
+          path: data/processed/macro_daily.parquet
+          key: macro-${{ github.run_id }}
+          restore-keys: macro-
+
+      - name: Fresh paper cycle
+        env:
+          TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
+        run: .venv/bin/python scripts/paper.py run "daily-report"
+
+      - name: Build report
+        env:
+          TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
+        run: .venv/bin/python scripts/daily_report.py --mention "${{ github.repository_owner }}"
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add journal/paper.sql reports/paper_report.md reports/daily data/live
+          if ! git diff --cached --quiet; then
+            git commit -m "daily report: $(date -u +'%Y-%m-%d')"
+            for i in 1 2 3; do git pull --rebase -X theirs origin main && git push && break; sleep 5; done
+          fi
+
+      - name: Post as issue (GitHub emails you)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          D=$(date -u +'%Y-%m-%d')
+          gh label create daily-report --color C9A227 --description "Daily paper-trading report" --force
+          gh issue create --title "Gold daily report $D" --body-file "reports/daily/$D.md" --label daily-report
