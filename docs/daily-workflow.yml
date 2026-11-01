@@ -46,9 +46,12 @@ jobs:
         run: .venv/bin/python scripts/paper.py run "daily-report"
 
       - name: Build report
+        id: build
         env:
           TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
-        run: .venv/bin/python scripts/daily_report.py --mention "${{ github.repository_owner }}"
+        # the script picks the last completed trading day itself (late or weekend runs stay correct)
+        # and prints the report path as its last line
+        run: echo "file=$(.venv/bin/python scripts/daily_report.py --mention '${{ github.repository_owner }}' | tail -1)" >> "$GITHUB_OUTPUT"
 
       - name: Commit
         run: |
@@ -64,6 +67,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          D=$(date -u +'%Y-%m-%d')
+          F="${{ steps.build.outputs.file }}"
+          T="Gold daily report $(basename "$F" .md)"
           gh label create daily-report --color C9A227 --description "Daily paper-trading report" --force
-          gh issue create --title "Gold daily report $D" --body-file "reports/daily/$D.md" --label daily-report
+          if gh issue list --label daily-report --state all --limit 50 --json title --jq '.[].title' | grep -qxF "$T"; then
+            echo "already posted: $T"
+          else
+            gh issue create --title "$T" --body-file "$F" --label daily-report
+          fi

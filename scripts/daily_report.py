@@ -98,20 +98,31 @@ def chart(d15, levels, now, path):
     plt.close(fig)
 
 
+def last_trading_day(now: pd.Timestamp) -> pd.Timestamp:
+    """The latest weekday whose NY close (21:00 UTC) has passed. A late or weekend run still reports that day."""
+    day = now.normalize()
+    if now < day + pd.Timedelta(hours=21):
+        day -= pd.Timedelta(days=1)
+    while day.dayofweek >= 5:
+        day -= pd.Timedelta(days=1)
+    return day
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--mention", default="kaamilstudiesig")
-    ap.add_argument("--date", help="report date YYYY-MM-DD (default: today UTC)")
+    ap.add_argument("--date", help="report date YYYY-MM-DD (default: the last completed trading day)")
     a = ap.parse_args()
     restore_sql()
     cfg = load_cfg()
-    now = pd.Timestamp.now(tz="UTC").floor("15min")
-    day = pd.Timestamp(a.date, tz="UTC") if a.date else now.normalize()
+    day = pd.Timestamp(a.date, tz="UTC") if a.date else last_trading_day(pd.Timestamp.now(tz="UTC"))
     d_end = day + pd.Timedelta(hours=21)
     d_start = d_end - pd.Timedelta(days=1)
     if day.dayofweek == 0:  # Monday's session starts at Sunday's open
         d_start = d_end - pd.Timedelta(days=3)
-    d15 = live.bars15("2025-01-01")
+    # everything below is "as of the NY close" of that day, even if the job runs hours later
+    now = min(pd.Timestamp.now(tz="UTC").floor("15min"), d_end)
+    d15 = live.bars15("2025-01-01").loc[: now - pd.Timedelta(minutes=15)]
     price = float(d15.close.iloc[-1])
     last_bar = d15.index[-1]
     prev = d15.close.loc[:d_start]
@@ -183,7 +194,7 @@ def main():
     # --- tomorrow
     h1 = live.to_hourly(d15)
     dc, dh, dl = h1.close.resample("D").last().dropna(), h1.high.resample("D").max().dropna(), h1.low.resample("D").min().dropna()
-    done = dc.index < now.normalize()  # daily_trend uses completed days only
+    done = dc.index <= day  # completed days up to and including the report day
     hi20, lo20 = dh[done].rolling(20).max().iloc[-1], dl[done].rolling(20).min().iloc[-1]
     sma100 = dc[done].rolling(100).mean().iloc[-1]
     bias = "DOWN" if price < sma100 else "UP"
