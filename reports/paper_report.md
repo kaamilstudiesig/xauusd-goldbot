@@ -1,20 +1,20 @@
 # Paper trading report
 
-Last run: 2026-11-06T01:46:19.510001+00:00 | last bar 2026-11-06 01:30:00+00:00 | basis 0.00 spot=4064.05 last_bar_close=4069.82
+Last run: 2026-11-06T06:28:33.360990+00:00 | last bar 2026-11-06 06:00:00+00:00 | basis 0.00 spot=4048.91 last_bar_close=4046.12
 Equity: 9,949.75 (closed -50.25, open +0.00)
 
 ## Route status (backtest + paper, recency-weighted)
-                route  weight  w_avg_r  eff_n   w_t status
-          daily_trend     1.0    0.336   12.1  0.71 active
-     daily_trend_long     0.0    0.951   14.2  1.80 shadow
-      london_breakout     0.0    0.056  156.3  0.87 shadow
-       trend_breakout     0.0    0.163  217.8  1.34 shadow
-       mean_reversion     0.0    0.328   14.2  0.75 shadow
-london_breakout+macro     0.0    0.122  124.4  1.72 shadow
- trend_breakout+macro     0.0    0.116  182.5  0.87 shadow
-    daily_trend+macro     0.0    0.495   20.4  1.37 shadow
-       trend_pullback     0.0   -0.080  149.1 -0.71 shadow
-             zone_v18     0.0    2.997    1.0  0.00 shadow
+                route  weight  w_avg_r  eff_n           w_t       status
+          daily_trend     1.0    0.336   12.1  7.100000e-01       active
+     daily_trend_long     0.0    0.951   14.2  1.800000e+00       shadow
+      london_breakout     0.0    0.056  156.3  8.700000e-01       shadow
+       trend_breakout     0.0    0.163  217.8  1.340000e+00       shadow
+       mean_reversion     0.0    0.328   14.2  7.500000e-01       shadow
+london_breakout+macro     0.0    0.122  124.4  1.720000e+00       shadow
+ trend_breakout+macro     0.0    0.116  182.5  8.700000e-01       shadow
+    daily_trend+macro     0.0    0.495   20.4  1.370000e+00       shadow
+       trend_pullback     0.0   -0.080  149.1 -7.100000e-01       shadow
+             zone_v18     0.0    2.997    1.0  6.748705e+15 flag_promote
 
 ## Closed trades by route
                                  trades  win_rate  avg_r  total_r      pnl
