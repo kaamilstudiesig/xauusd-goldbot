@@ -590,6 +590,16 @@ INSERT INTO "allocation" VALUES('2026-11-13T06:25:06.618442+00:00','trend_breako
 INSERT INTO "allocation" VALUES('2026-11-13T06:25:06.621283+00:00','daily_trend+macro',0.0,0.495,20.4,1.37,'shadow',59);
 INSERT INTO "allocation" VALUES('2026-11-13T06:25:06.624210+00:00','trend_pullback',0.0,-0.08,149.1,-0.71,'shadow',59);
 INSERT INTO "allocation" VALUES('2026-11-13T06:25:06.626994+00:00','zone_v18',0.0,2.994,2.0,1335.24,'flag_promote',59);
+INSERT INTO "allocation" VALUES('2026-11-13T15:17:08.787061+00:00','daily_trend',1.0,0.336,12.1,0.71,'active',60);
+INSERT INTO "allocation" VALUES('2026-11-13T15:17:08.788814+00:00','daily_trend_long',0.0,0.951,14.2,1.8,'shadow',60);
+INSERT INTO "allocation" VALUES('2026-11-13T15:17:08.790354+00:00','london_breakout',0.0,0.096,134.5,1.4,'shadow',60);
+INSERT INTO "allocation" VALUES('2026-11-13T15:17:08.791844+00:00','trend_breakout',0.0,0.211,192.4,1.61,'shadow',60);
+INSERT INTO "allocation" VALUES('2026-11-13T15:17:08.793224+00:00','mean_reversion',0.0,0.328,14.2,0.75,'shadow',60);
+INSERT INTO "allocation" VALUES('2026-11-13T15:17:08.794633+00:00','london_breakout+macro',0.0,0.169,101.1,2.19,'flag_promote',60);
+INSERT INTO "allocation" VALUES('2026-11-13T15:17:08.796074+00:00','trend_breakout+macro',0.0,0.178,155.4,1.21,'shadow',60);
+INSERT INTO "allocation" VALUES('2026-11-13T15:17:08.797431+00:00','daily_trend+macro',0.0,0.495,20.4,1.37,'shadow',60);
+INSERT INTO "allocation" VALUES('2026-11-13T15:17:08.798829+00:00','trend_pullback',0.0,-0.08,149.1,-0.71,'shadow',60);
+INSERT INTO "allocation" VALUES('2026-11-13T15:17:08.800128+00:00','zone_v18',0.0,2.994,2.0,1335.24,'flag_promote',60);
 CREATE TABLE discrepancies (ts TEXT, route TEXT, entry_time TEXT, field TEXT, frozen REAL, replay REAL);
 CREATE TABLE equity (ts TEXT PRIMARY KEY, equity REAL, open_pnl REAL, closed_pnl REAL, run_id INTEGER);
 INSERT INTO "equity" VALUES('2026-10-29 19:45:00+00:00',10000.0,0.0,0.0,1);
@@ -639,6 +649,7 @@ INSERT INTO "equity" VALUES('2026-11-12 17:15:00+00:00',9949.7503342315704,0.0,-
 INSERT INTO "equity" VALUES('2026-11-12 23:00:00+00:00',9949.7503342315704,0.0,-50.249665768429658,57);
 INSERT INTO "equity" VALUES('2026-11-13 01:45:00+00:00',9949.7503342315704,0.0,-50.249665768429658,58);
 INSERT INTO "equity" VALUES('2026-11-13 06:00:00+00:00',9949.7503342315704,0.0,-50.249665768429658,59);
+INSERT INTO "equity" VALUES('2026-11-13 15:00:00+00:00',9949.7503342315704,0.0,-50.249665768429658,60);
 CREATE TABLE notes (ts TEXT, author TEXT, route TEXT, text TEXT, tags TEXT);
 CREATE TABLE runs (
   run_id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, last_bar TEXT, n_bars INTEGER,
@@ -702,6 +713,7 @@ INSERT INTO "runs" VALUES(56,'2026-11-12T17:30:49.931342+00:00','2026-11-12 17:1
 INSERT INTO "runs" VALUES(57,'2026-11-12T23:29:51.978022+00:00','2026-11-12 23:00:00+00:00',67879,'twelvedata_spot (+19 bars)',0.0,'spot=3876.27 last_bar_close=3875.86','github-actions');
 INSERT INTO "runs" VALUES(58,'2026-11-13T02:06:04.962649+00:00','2026-11-13 01:45:00+00:00',67890,'twelvedata_spot (+11 bars)',0.0,'spot=3911.29 last_bar_close=3909.83','daily-report');
 INSERT INTO "runs" VALUES(59,'2026-11-13T06:25:05.847109+00:00','2026-11-13 06:00:00+00:00',67907,'twelvedata_spot (+17 bars)',0.0,'spot=3895.75 last_bar_close=3899.72','github-actions');
+INSERT INTO "runs" VALUES(60,'2026-11-13T15:17:08.298626+00:00','2026-11-13 15:00:00+00:00',67943,'twelvedata_spot (+36 bars)',0.0,'spot=3887.72 last_bar_close=3893.19','github-actions');
 CREATE TABLE signals (
   route TEXT, bar_time TEXT, side INTEGER, close REAL, sl_dist REAL, tp_dist REAL, run_id INTEGER,
   PRIMARY KEY (route, bar_time));
@@ -773,5 +785,5 @@ INSERT INTO "trades" VALUES('london_breakout','2026-11-12 09:00:00+00:00','2026-
 INSERT INTO "trades" VALUES('london_breakout+macro','2026-11-12 09:00:00+00:00','2026-11-12 13:00:00+00:00',-1,3931.305,3895.16,3977.8515774779839,3895.16,13.0,38.751506506641469,0.7750301301328294,'target',4,'closed',0.0,'{"close": 3931.486, "atr": 15.51553, "adx": 41.14161, "rsi": 19.66054, "vol_ratio": 0.96131, "ema50": 4021.63794, "ema200": 4042.33167, "DFII10": 2.78, "ry_chg20": 0.14, "dxy_chg20": 0.01279, "vix_z": -0.22102, "hour": 8.0, "spread_model": 0.25}',58,58);
 INSERT INTO "trades" VALUES('trend_breakout+macro','2026-11-12 00:00:00+00:00','2026-11-13 01:00:00+00:00',-1,3980.2709999999997,3906.2494189242134,4004.9466126161419,NULL,13.0,148.46171341693196,2.9925308726451605,'stop',24,'closed',0.0,'{"close": 3979.681, "atr": 12.33781, "adx": 33.47014, "rsi": 21.88169, "vol_ratio": 0.77328, "ema50": 4043.18393, "ema200": 4048.8537, "DFII10": 2.78, "ry_chg20": 0.02, "dxy_chg20": 0.00442, "vix_z": 0.28293, "hour": 23.0, "spread_model": 0.4}',58,58);
 DELETE FROM "sqlite_sequence";
-INSERT INTO "sqlite_sequence" VALUES('runs',59);
+INSERT INTO "sqlite_sequence" VALUES('runs',60);
 COMMIT;
