@@ -1,7 +1,7 @@
 # Paper trading report
 
-Last run: 2026-11-19T02:46:39.070115+00:00 | last bar 2026-11-19 02:30:00+00:00 | basis 0.00 spot=3733.71 last_bar_close=3735.31
-Equity: 9,941.40 (closed -50.25, open -8.35)
+Last run: 2026-11-19T11:27:23.136681+00:00 | last bar 2026-11-19 11:00:00+00:00 | basis 0.00 spot=3726.75 last_bar_close=3728.25
+Equity: 9,946.45 (closed -50.25, open -3.30)
 
 ## Route status (backtest + paper, recency-weighted)
                 route  weight  w_avg_r  eff_n     w_t       status
@@ -30,9 +30,9 @@ True      daily_trend                 1      0.00 -1.005   -1.005  -50.250
                route  portfolio                entry_time  side    entry          sl  tp        pnl
 trend_breakout+macro      False 2026-10-30 04:00:00+00:00    -1 3992.903 4022.321288 NaN 199.408273
    daily_trend+macro      False 2026-10-30 20:00:00+00:00    -1 3882.699 4043.289012 NaN   2.217137
-      trend_breakout      False 2026-11-18 01:00:00+00:00    -1 3815.277 3848.639437 NaN  92.792555
-trend_breakout+macro      False 2026-11-18 01:00:00+00:00    -1 3815.277 3848.639437 NaN  91.665838
-         daily_trend       True 2026-11-18 20:00:00+00:00    -1 3723.386 3907.205534 NaN  -8.348136
-   daily_trend+macro      False 2026-11-18 20:00:00+00:00    -1 3723.386 3907.205534 NaN  -8.390297
+      trend_breakout      False 2026-11-18 01:00:00+00:00    -1 3815.277 3848.639437 NaN 121.135398
+trend_breakout+macro      False 2026-11-18 01:00:00+00:00    -1 3815.277 3848.639437 NaN 119.664533
+         daily_trend       True 2026-11-18 20:00:00+00:00    -1 3723.386 3907.205534 NaN  -3.302070
+   daily_trend+macro      False 2026-11-18 20:00:00+00:00    -1 3723.386 3907.205534 NaN  -3.318747
 
 Total closed trades: 21. Judge routes after 100+ trades, not after a month.
