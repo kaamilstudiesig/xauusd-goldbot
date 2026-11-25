@@ -1,6 +1,6 @@
 # Paper trading report
 
-Last run: 2026-11-25T04:06:38.372131+00:00 | last bar 2026-11-25 03:45:00+00:00 | basis 0.00 spot=3544.84 last_bar_close=3548.55
+Last run: 2026-11-25T04:33:04.988757+00:00 | last bar 2026-11-25 04:15:00+00:00 | basis 0.00 spot=3550.00 last_bar_close=3551.12
 Equity: 9,996.86 (closed -50.25, open +47.10)
 
 ## Route status (backtest + paper, recency-weighted)
